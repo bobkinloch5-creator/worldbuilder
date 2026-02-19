@@ -1,254 +1,145 @@
 "use client"
 
-import { useRef, useMemo } from "react"
-import { Canvas, useFrame } from "@react-three/fiber"
-import { OrbitControls, Environment, ContactShadows, Float } from "@react-three/drei"
+import { useRef, Suspense, useState, useCallback } from "react"
+import { Canvas, useFrame, useLoader } from "@react-three/fiber"
+import {
+    OrbitControls,
+    Environment,
+    ContactShadows,
+    useGLTF,
+    Center,
+    Grid,
+    Html,
+} from "@react-three/drei"
 import * as THREE from "three"
 
-// Map keywords to shapes
-function getShapeFromPrompt(prompt: string): "castle" | "sword" | "furniture" | "vehicle" | "tree" | "building" | "box" {
+// Free GLB models from reliable public CDNs
+const MODEL_URLS: Record<string, { url: string; scale: number; label: string }> = {
+    helmet: {
+        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/DamagedHelmet/glTF-Binary/DamagedHelmet.glb",
+        scale: 1.2,
+        label: "Sci-Fi Helmet",
+    },
+    avocado: {
+        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Avocado/glTF-Binary/Avocado.glb",
+        scale: 30,
+        label: "Organic Model",
+    },
+    lantern: {
+        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Lantern/glTF-Binary/Lantern.glb",
+        scale: 0.04,
+        label: "Lantern Prop",
+    },
+    duck: {
+        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Duck/glTF-Binary/Duck.glb",
+        scale: 0.02,
+        label: "Character Model",
+    },
+    boom_box: {
+        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/BoomBox/glTF-Binary/BoomBox.glb",
+        scale: 80,
+        label: "Detailed Prop",
+    },
+    toy_car: {
+        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/ToyCar/glTF-Binary/ToyCar.glb",
+        scale: 200,
+        label: "Vehicle Model",
+    },
+}
+
+// Map prompt keywords to model
+function getModelFromPrompt(prompt: string): string {
     const lower = prompt.toLowerCase()
-    if (/castle|tower|fortress|keep/.test(lower)) return "castle"
-    if (/sword|weapon|blade|axe|dagger/.test(lower)) return "sword"
-    if (/chair|table|desk|bed|sofa|couch|cabinet|shelf|armchair|cabin/.test(lower)) return "furniture"
-    if (/car|ship|boat|vehicle|spaceship|plane/.test(lower)) return "vehicle"
-    if (/tree|plant|flower|bush|forest/.test(lower)) return "tree"
-    if (/house|building|shop|store|wall/.test(lower)) return "building"
-    return "box"
+    if (/sword|weapon|blade|axe|dagger|armor|helmet|shield/.test(lower)) return "helmet"
+    if (/car|ship|boat|vehicle|spaceship|plane|truck/.test(lower)) return "toy_car"
+    if (/lamp|lantern|light|torch|candle|castle|tower|medieval/.test(lower)) return "lantern"
+    if (/tree|plant|flower|bush|forest|fruit|food|organic/.test(lower)) return "avocado"
+    if (/character|npc|animal|creature|pet|duck|bird/.test(lower)) return "duck"
+    if (/radio|speaker|box|device|tech|gadget|furniture|chair|table/.test(lower)) return "boom_box"
+    return "helmet" // Default to the impressive damaged helmet
 }
 
-function getStyleColor(style: string): string {
-    switch (style) {
-        case "cartoon": return "#4ECDC4"
-        case "sculpture": return "#C9B59C"
-        default: return "#6C63FF"
-    }
-}
-
-// Procedural castle shape
-function CastleShape({ color }: { color: string }) {
-    return (
-        <group>
-            {/* Base */}
-            <mesh position={[0, 0.4, 0]}>
-                <boxGeometry args={[1.2, 0.8, 1.2]} />
-                <meshStandardMaterial color={color} roughness={0.6} />
-            </mesh>
-            {/* Tower 1 */}
-            <mesh position={[-0.5, 1.1, -0.5]}>
-                <cylinderGeometry args={[0.2, 0.25, 1, 8]} />
-                <meshStandardMaterial color={color} roughness={0.5} />
-            </mesh>
-            {/* Tower 2 */}
-            <mesh position={[0.5, 1.1, -0.5]}>
-                <cylinderGeometry args={[0.2, 0.25, 1, 8]} />
-                <meshStandardMaterial color={color} roughness={0.5} />
-            </mesh>
-            {/* Tower 3 */}
-            <mesh position={[-0.5, 1.1, 0.5]}>
-                <cylinderGeometry args={[0.2, 0.25, 1, 8]} />
-                <meshStandardMaterial color={color} roughness={0.5} />
-            </mesh>
-            {/* Tower 4 */}
-            <mesh position={[0.5, 1.1, 0.5]}>
-                <cylinderGeometry args={[0.2, 0.25, 1, 8]} />
-                <meshStandardMaterial color={color} roughness={0.5} />
-            </mesh>
-            {/* Roof cones */}
-            {[[-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5], [0.5, 0.5]].map(([x, z], i) => (
-                <mesh key={i} position={[x, 1.75, z]}>
-                    <coneGeometry args={[0.25, 0.4, 8]} />
-                    <meshStandardMaterial color="#FF6B6B" roughness={0.4} />
-                </mesh>
-            ))}
-        </group>
-    )
-}
-
-// Sword shape
-function SwordShape({ color }: { color: string }) {
-    return (
-        <group rotation={[0, 0, Math.PI / 6]}>
-            {/* Blade */}
-            <mesh position={[0, 0.8, 0]}>
-                <boxGeometry args={[0.08, 1.4, 0.02]} />
-                <meshStandardMaterial color="#C0C0C0" metalness={0.9} roughness={0.15} />
-            </mesh>
-            {/* Guard */}
-            <mesh position={[0, 0.05, 0]}>
-                <boxGeometry args={[0.5, 0.08, 0.08]} />
-                <meshStandardMaterial color={color} roughness={0.3} />
-            </mesh>
-            {/* Handle */}
-            <mesh position={[0, -0.35, 0]}>
-                <cylinderGeometry args={[0.04, 0.04, 0.5, 8]} />
-                <meshStandardMaterial color="#8B4513" roughness={0.7} />
-            </mesh>
-            {/* Pommel */}
-            <mesh position={[0, -0.65, 0]}>
-                <sphereGeometry args={[0.07, 8, 8]} />
-                <meshStandardMaterial color={color} roughness={0.3} />
-            </mesh>
-        </group>
-    )
-}
-
-// Furniture shape
-function FurnitureShape({ color }: { color: string }) {
-    return (
-        <group>
-            {/* Seat */}
-            <mesh position={[0, 0.45, 0]}>
-                <boxGeometry args={[0.8, 0.1, 0.8]} />
-                <meshStandardMaterial color={color} roughness={0.6} />
-            </mesh>
-            {/* Back */}
-            <mesh position={[0, 0.85, -0.35]}>
-                <boxGeometry args={[0.8, 0.7, 0.1]} />
-                <meshStandardMaterial color={color} roughness={0.6} />
-            </mesh>
-            {/* Legs */}
-            {[[-0.3, -0.3], [0.3, -0.3], [-0.3, 0.3], [0.3, 0.3]].map(([x, z], i) => (
-                <mesh key={i} position={[x, 0.2, z]}>
-                    <cylinderGeometry args={[0.03, 0.03, 0.4, 6]} />
-                    <meshStandardMaterial color="#8B4513" roughness={0.7} />
-                </mesh>
-            ))}
-        </group>
-    )
-}
-
-// Vehicle shape
-function VehicleShape({ color }: { color: string }) {
-    return (
-        <group>
-            {/* Body */}
-            <mesh position={[0, 0.3, 0]}>
-                <boxGeometry args={[0.6, 0.4, 1.4]} />
-                <meshStandardMaterial color={color} roughness={0.4} metalness={0.3} />
-            </mesh>
-            {/* Cockpit */}
-            <mesh position={[0, 0.6, -0.1]}>
-                <boxGeometry args={[0.5, 0.3, 0.6]} />
-                <meshStandardMaterial color="#87CEEB" roughness={0.1} metalness={0.5} opacity={0.7} transparent />
-            </mesh>
-            {/* Wings */}
-            <mesh position={[0, 0.3, 0.2]}>
-                <boxGeometry args={[1.8, 0.05, 0.4]} />
-                <meshStandardMaterial color={color} roughness={0.4} />
-            </mesh>
-        </group>
-    )
-}
-
-// Tree shape
-function TreeShape({ color }: { color: string }) {
-    return (
-        <group>
-            {/* Trunk */}
-            <mesh position={[0, 0.4, 0]}>
-                <cylinderGeometry args={[0.08, 0.12, 0.8, 6]} />
-                <meshStandardMaterial color="#8B4513" roughness={0.8} />
-            </mesh>
-            {/* Foliage layers */}
-            <mesh position={[0, 1.0, 0]}>
-                <coneGeometry args={[0.5, 0.6, 8]} />
-                <meshStandardMaterial color="#228B22" roughness={0.8} />
-            </mesh>
-            <mesh position={[0, 1.35, 0]}>
-                <coneGeometry args={[0.4, 0.5, 8]} />
-                <meshStandardMaterial color="#2E8B2E" roughness={0.8} />
-            </mesh>
-            <mesh position={[0, 1.65, 0]}>
-                <coneGeometry args={[0.25, 0.4, 8]} />
-                <meshStandardMaterial color="#32CD32" roughness={0.8} />
-            </mesh>
-        </group>
-    )
-}
-
-// Building shape
-function BuildingShape({ color }: { color: string }) {
-    return (
-        <group>
-            <mesh position={[0, 0.5, 0]}>
-                <boxGeometry args={[1, 1, 0.8]} />
-                <meshStandardMaterial color={color} roughness={0.7} />
-            </mesh>
-            {/* Roof */}
-            <mesh position={[0, 1.2, 0]} rotation={[0, Math.PI / 4, 0]}>
-                <coneGeometry args={[0.85, 0.5, 4]} />
-                <meshStandardMaterial color="#8B4513" roughness={0.6} />
-            </mesh>
-            {/* Door */}
-            <mesh position={[0, 0.25, 0.41]}>
-                <boxGeometry args={[0.25, 0.5, 0.02]} />
-                <meshStandardMaterial color="#5C3317" roughness={0.8} />
-            </mesh>
-            {/* Windows */}
-            {[[-0.3, 0.6], [0.3, 0.6]].map(([x, y], i) => (
-                <mesh key={i} position={[x, y, 0.41]}>
-                    <boxGeometry args={[0.15, 0.15, 0.02]} />
-                    <meshStandardMaterial color="#87CEEB" roughness={0.1} />
-                </mesh>
-            ))}
-        </group>
-    )
-}
-
-// Default box
-function BoxShape({ color }: { color: string }) {
-    return (
-        <mesh position={[0, 0.5, 0]}>
-            <boxGeometry args={[0.8, 0.8, 0.8]} />
-            <meshStandardMaterial color={color} roughness={0.4} metalness={0.2} />
-        </mesh>
-    )
-}
-
-function AutoRotate({ children }: { children: React.ReactNode }) {
+function LoadedModel({ url, scale }: { url: string; scale: number }) {
+    const { scene } = useGLTF(url)
     const ref = useRef<THREE.Group>(null)
+
     useFrame((_, delta) => {
-        if (ref.current) ref.current.rotation.y += delta * 0.4
+        if (ref.current) ref.current.rotation.y += delta * 0.3
     })
-    return <group ref={ref}>{children}</group>
+
+    return (
+        <group ref={ref}>
+            <Center>
+                <primitive object={scene.clone()} scale={scale} />
+            </Center>
+        </group>
+    )
 }
 
-function Scene({ prompt, style }: { prompt: string; style: string }) {
-    const shape = getShapeFromPrompt(prompt)
-    const color = getStyleColor(style)
+function LoadingSpinner() {
+    return (
+        <Html center>
+            <div className="flex flex-col items-center gap-2">
+                <div className="size-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+                <span className="text-[11px] text-slate-400 font-medium">Loading model...</span>
+            </div>
+        </Html>
+    )
+}
 
-    const ShapeComponent = useMemo(() => {
-        switch (shape) {
-            case "castle": return CastleShape
-            case "sword": return SwordShape
-            case "furniture": return FurnitureShape
-            case "vehicle": return VehicleShape
-            case "tree": return TreeShape
-            case "building": return BuildingShape
-            default: return BoxShape
-        }
-    }, [shape])
+function Scene({ prompt }: { prompt: string }) {
+    const modelKey = getModelFromPrompt(prompt)
+    const model = MODEL_URLS[modelKey]
 
     return (
         <>
-            <ambientLight intensity={0.4} />
-            <directionalLight position={[5, 5, 5]} intensity={1} castShadow />
-            <pointLight position={[-3, 3, -3]} intensity={0.3} color="#6C63FF" />
+            {/* Lighting */}
+            <ambientLight intensity={0.3} />
+            <directionalLight position={[5, 8, 5]} intensity={1.5} castShadow color="#ffffff" />
+            <directionalLight position={[-3, 4, -3]} intensity={0.4} color="#6C63FF" />
+            <pointLight position={[0, 3, 0]} intensity={0.5} color="#10B981" />
 
-            <AutoRotate>
-                <Float speed={1.5} rotationIntensity={0.2} floatIntensity={0.3}>
-                    <ShapeComponent color={color} />
-                </Float>
-            </AutoRotate>
+            {/* Model */}
+            <Suspense fallback={<LoadingSpinner />}>
+                <LoadedModel url={model.url} scale={model.scale} />
+            </Suspense>
 
-            <ContactShadows position={[0, -0.01, 0]} opacity={0.4} blur={2} far={4} />
+            {/* Floor grid */}
+            <Grid
+                args={[20, 20]}
+                cellSize={0.5}
+                cellThickness={0.5}
+                cellColor="#1e293b"
+                sectionSize={2}
+                sectionThickness={1}
+                sectionColor="#334155"
+                fadeDistance={15}
+                fadeStrength={1}
+                followCamera={false}
+                infiniteGrid
+                position={[0, -1.2, 0]}
+            />
+
+            {/* Shadow on floor */}
+            <ContactShadows
+                position={[0, -1.19, 0]}
+                opacity={0.6}
+                blur={2.5}
+                far={4}
+                color="#000000"
+            />
+
+            {/* Environment */}
             <Environment preset="city" />
+
+            {/* Controls */}
             <OrbitControls
                 enablePan={false}
                 enableZoom={true}
-                minDistance={2}
-                maxDistance={8}
+                minDistance={1.5}
+                maxDistance={6}
+                minPolarAngle={0.3}
+                maxPolarAngle={Math.PI / 2}
                 autoRotate={false}
             />
         </>
@@ -260,19 +151,78 @@ interface ModelPreviewProps {
     style: string
 }
 
-export function ModelPreview({ prompt, style }: ModelPreviewProps) {
+export function ModelPreview({ prompt }: ModelPreviewProps) {
+    const [isHovered, setIsHovered] = useState(false)
+    const modelKey = getModelFromPrompt(prompt)
+    const model = MODEL_URLS[modelKey]
+
+    const handleMouseEnter = useCallback(() => setIsHovered(true), [])
+    const handleMouseLeave = useCallback(() => setIsHovered(false), [])
+
     return (
-        <div className="w-full h-[280px] rounded-xl overflow-hidden border border-border bg-gradient-to-b from-secondary/50 to-background relative">
+        <div
+            className="w-full h-[320px] rounded-2xl overflow-hidden relative group"
+            style={{
+                background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
+            }}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+        >
+            {/* Subtle glow effect */}
+            <div
+                className="absolute inset-0 opacity-30 pointer-events-none"
+                style={{
+                    background:
+                        "radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.15) 0%, transparent 60%)",
+                }}
+            />
+
+            {/* 3D Canvas */}
             <Canvas
-                camera={{ position: [2.5, 2, 2.5], fov: 45 }}
+                camera={{ position: [2, 1.5, 2.5], fov: 40 }}
                 shadows
-                gl={{ antialias: true }}
+                gl={{ antialias: true, alpha: true }}
+                style={{ background: "transparent" }}
             >
-                <Scene prompt={prompt} style={style} />
+                <Scene prompt={prompt} />
             </Canvas>
-            <div className="absolute bottom-2 left-2 flex items-center gap-1.5 px-2 py-1 rounded-md bg-background/80 backdrop-blur-sm border border-border">
-                <div className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-[10px] text-muted-foreground">3D Preview · Drag to rotate</span>
+
+            {/* Top-left: Model info badge */}
+            <div className="absolute top-3 left-3 flex items-center gap-2">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900/80 backdrop-blur-md border border-slate-700/50">
+                    <div className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-[10px] text-slate-300 font-medium">
+                        {model.label}
+                    </span>
+                </div>
+            </div>
+
+            {/* Top-right: Poly count badge */}
+            <div className="absolute top-3 right-3">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900/80 backdrop-blur-md border border-slate-700/50">
+                    <span className="text-[10px] text-emerald-400 font-mono font-bold">GLB</span>
+                    <span className="text-[10px] text-slate-400">•</span>
+                    <span className="text-[10px] text-slate-300">Real-time</span>
+                </div>
+            </div>
+
+            {/* Bottom controls bar */}
+            <div
+                className={`absolute bottom-0 left-0 right-0 py-2.5 px-3 flex items-center justify-between transition-all duration-300 ${isHovered ? "opacity-100" : "opacity-70"
+                    }`}
+                style={{
+                    background: "linear-gradient(to top, rgba(15,23,42,0.9) 0%, transparent 100%)",
+                }}
+            >
+                <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-slate-400">
+                        🖱️ Drag to rotate · Scroll to zoom
+                    </span>
+                </div>
+                <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                    <span>Powered by</span>
+                    <span className="text-emerald-400 font-semibold">Three.js</span>
+                </div>
             </div>
         </div>
     )
