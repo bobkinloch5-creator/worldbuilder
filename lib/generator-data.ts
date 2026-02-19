@@ -1574,11 +1574,69 @@ Large Build (20+ modules):
   - ~${count * 3 * 8}+ prims total`
 }
 
+function generateModelOutput(values: Record<string, string>): string {
+  const method = values.inputMethod || "text-to-3d"
+  const prompt = values.prompt || "A 3D object"
+  const style = values.style || "realistic"
+  const format = values.format || "glb"
+
+  return `// ============================================
+// 3D Model Generation Brief
+// Method: ${method === "text-to-3d" ? "Text to 3D" : "Image to 3D"}
+// Style: ${style}
+// Export Format: .${format.toUpperCase()}
+// ============================================
+
+// --- Description ---
+// "${prompt}"
+
+// --- Generation Steps ---
+// 1. Open Canva Pro or your preferred 3D tool (Meshy, CSM, Tripo3D)
+// 2. Use the following optimized prompt:
+
+// --- AI Prompt (copy this into your 3D generator) ---
+/*
+${prompt}
+Style: ${style}
+Output: High quality ${style} 3D mesh
+Topology: Clean quad-based mesh, optimized for real-time rendering
+Poly count: ${style === "cartoon" ? "500-2000 tris (low poly)" : "2000-8000 tris (medium detail)"}
+*/
+
+// --- Post-Processing Checklist ---
+// [ ] Check mesh for non-manifold geometry
+// [ ] Verify UV mapping is correct
+// [ ] Generate LOD levels (High, Medium, Low, Lowest)
+// [ ] Export as .${format.toUpperCase()}
+// [ ] Verify textures are embedded or exported alongside
+${format === "glb" ? "// [ ] Validate with https://gltf-viewer.donmccurdy.com/" : ""}
+
+// --- Second Life Upload Notes ---
+// - Max upload size: 64MB per mesh
+// - Recommended: Export as .DAE (COLLADA) for SL upload
+// - Include physics shape (simplified convex hull)
+// - LOD levels: High (original), Medium (50%), Low (25%), Lowest (10%)
+// - Land Impact depends on mesh complexity and physics shape
+
+// --- Texture Requirements ---
+// Diffuse Map:  1024x1024 (PNG or TGA)
+// Normal Map:   1024x1024 (optional, improves detail)
+// Specular Map: 512x512 (optional, for shininess)
+
+// --- Recommended Free Tools ---
+// Meshy.ai     — Text/Image to 3D (free tier available)
+// Tripo3D      — Fast text-to-3D generation
+// CSM (3DFy)   — Image to 3D mesh
+// Blender      — Post-processing and export to .DAE`
+}
+
 export function generateOutput(
   category: Category,
   values: Record<string, string>
 ): string {
   switch (category) {
+    case "models":
+      return generateModelOutput(values)
     case "scripts":
       return generateScriptOutput(values)
     case "prefabs":

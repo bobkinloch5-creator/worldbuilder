@@ -17,9 +17,10 @@ import { OutputPanel } from "@/components/output-panel"
 import { EmptyOutput } from "@/components/empty-output"
 import { AiPromptPanel } from "@/components/ai-prompt-panel"
 import { categories, generateOutput, type Category } from "@/lib/generator-data"
-import { Code, Box, Paintbrush, Users, Globe, Puzzle } from "lucide-react"
+import { Code, Box, Paintbrush, Users, Globe, Puzzle, Cuboid } from "lucide-react"
 
 const categoryIcons: Record<Category, typeof Code> = {
+  models: Cuboid,
   scripts: Code,
   prefabs: Box,
   textures: Paintbrush,
