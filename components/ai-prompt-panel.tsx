@@ -12,6 +12,7 @@ interface AiPromptPanelProps {
 }
 
 const categoryLabels: Record<Category, string> = {
+    models: "3D Model / Asset",
     scripts: "LSL Script",
     prefabs: "Build Plan",
     textures: "Asset Brief",
@@ -21,6 +22,7 @@ const categoryLabels: Record<Category, string> = {
 }
 
 const placeholders: Record<Category, string> = {
+    models: "e.g., A low-poly medieval sword with glowing runes...",
     scripts: "e.g., Make a script that changes prim color on touch with a menu of 8 colors...",
     prefabs: "e.g., Design a medieval watchtower with 3 floors, archer slits, and a spiral staircase...",
     textures: "e.g., Create a weathered stone brick texture for a dungeon wall, PBR with normal map...",

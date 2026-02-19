@@ -1,4 +1,4 @@
-export type Category = "scripts" | "prefabs" | "textures" | "npcs" | "worlds" | "modules"
+export type Category = "scripts" | "prefabs" | "textures" | "npcs" | "worlds" | "modules" | "models"
 
 export interface GeneratorField {
   id: string
@@ -18,6 +18,51 @@ export interface CategoryConfig {
 }
 
 export const categories: CategoryConfig[] = [
+  {
+    id: "models",
+    label: "AI 3D Model Generator",
+    description: "Generate 3D mesh models from text or image references",
+    icon: "Box", // Using Box as placeholder, will import Box if needed, or leave as string if it's dynamic
+    fields: [
+      {
+        id: "inputMethod",
+        label: "Generation Method",
+        type: "select",
+        required: true,
+        options: [
+          { value: "text-to-3d", label: "Text to 3D Model" },
+          { value: "image-to-3d", label: "Image to 3D Model" },
+        ],
+      },
+      {
+        id: "prompt",
+        label: "Description or Image URL",
+        type: "textarea",
+        placeholder: "Describe the 3D model you want to generate...",
+        required: true,
+      },
+      {
+        id: "style",
+        label: "Art Style",
+        type: "select",
+        options: [
+          { value: "realistic", label: "Realistic" },
+          { value: "cartoon", label: "Cartoon / Low Poly" },
+          { value: "sculpture", label: "Statue / Sculpture" },
+        ],
+      },
+      {
+        id: "format",
+        label: "File Format",
+        type: "select",
+        options: [
+          { value: "glb", label: ".GLB (Binary glTF)" },
+          { value: "obj", label: ".OBJ (Wavefront)" },
+          { value: "usdz", label: ".USDZ (AR Ready)" },
+        ],
+      },
+    ],
+  },
   {
     id: "scripts",
     label: "LSL Scripts",

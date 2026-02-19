@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 export async function POST(req: NextRequest) {
     const apiKey = process.env.OPENROUTER_API_KEY
+    console.log("API Key check:", apiKey ? "Exists" : "Missing")
 
     if (!apiKey) {
         return NextResponse.json(
@@ -131,6 +132,15 @@ Focus: Generate modular building system configurations. Include:
 - Inter-module communication scripts
 - Color change / texture swap menus
 - Scaling guidelines`,
+
+        models: `${base}
+
+Focus: You are a 3D modeling expert. Generate a comprehensive design brief and step-by-step modeling guide for the requested 3D object. Include:
+- Geometry details (poly count target, topology flow)
+- Texture requirements (maps needed: diffuse, normal, roughness, metallic)
+- Rigging/Animation points (if applicable)
+- Export settings for Second Life / OpenSim (.dae, LoD rules)
+- A detailed "Prompt for Text-to-3D AI" section that the user can copy into tools like Meshy or CSM.`,
     }
 
     return categoryPrompts[category || "scripts"] || categoryPrompts.scripts
