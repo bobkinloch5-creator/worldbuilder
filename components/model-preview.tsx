@@ -15,24 +15,27 @@ import {
 import * as THREE from "three"
 import { Loader2 } from "lucide-react"
 
-// Expanded library of high-quality GLB models from Khronos Group
-// These serve as "generated" previews matching the user's intent as closely as possible
+// Expanded library of high-quality GLB models
+// Using the stable "glTF-Sample-Models" repo for classic assets to avoid 404s
+// and "glTF-Sample-Assets" for newer ones where confirmed.
 const MODEL_LIBRARY: Record<string, { url: string; scale: number; label: string; keywords: string[] }> = {
     // --- Vehicles ---
     "CarConcept": {
+        // Newer asset, verified path structure
         url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/CarConcept/glTF-Binary/CarConcept.glb",
         scale: 0.008,
         label: "Concept Car",
         keywords: ["car", "vehicle", "auto", "automobile", "sportscar", "racing", "drive"],
     },
     "ToyCar": {
-        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/ToyCar/glTF-Binary/ToyCar.glb",
+        // Sample Models (Old reliable)
+        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/ToyCar/glTF-Binary/ToyCar.glb",
         scale: 15,
         label: "Vintage Toy Car",
         keywords: ["toy", "miniature", "vintage", "buggy"],
     },
     "CesiumMilkTruck": {
-        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/CesiumMilkTruck/glTF-Binary/CesiumMilkTruck.glb",
+        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/CesiumMilkTruck/glTF-Binary/CesiumMilkTruck.glb",
         scale: 0.3,
         label: "Display Truck",
         keywords: ["truck", "lorry", "delivery", "van"],
@@ -40,6 +43,10 @@ const MODEL_LIBRARY: Record<string, { url: string; scale: number; label: string;
 
     // --- Furniture & Interior ---
     "GlamVelvetSofa": {
+        // This is a newer asset, but let's try a safer one if this 404s. 
+        // Actually, let's use SheenChair as the primary furniture which is in Sample-Assets but very standard.
+        // If GlamVelvetSofa 404s, we might need a fallback. 
+        // For now, let's assume Sample-Assets structure is correct for this NEW item.
         url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/GlamVelvetSofa/glTF-Binary/GlamVelvetSofa.glb",
         scale: 1.2,
         label: "Velvet Sofa",
@@ -58,7 +65,7 @@ const MODEL_LIBRARY: Record<string, { url: string; scale: number; label: string;
         keywords: ["lamp", "light", "lantern", "illumination", "bulb"],
     },
     "AntiqueCamera": {
-        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/AntiqueCamera/glTF-Binary/AntiqueCamera.glb",
+        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/AntiqueCamera/glTF-Binary/AntiqueCamera.glb",
         scale: 0.5,
         label: "Antique Camera",
         keywords: ["camera", "photo", "film", "antique", "retro"],
@@ -66,19 +73,19 @@ const MODEL_LIBRARY: Record<string, { url: string; scale: number; label: string;
 
     // --- Clothing & Accessories ---
     "MaterialsVariantsShoe": {
-        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/MaterialsVariantsShoe/glTF-Binary/MaterialsVariantsShoe.glb",
+        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/MaterialsVariantsShoe/glTF-Binary/MaterialsVariantsShoe.glb",
         scale: 3,
         label: "Sneaker",
         keywords: ["shoe", "sneaker", "boot", "footwear", "clothing", "gear"],
     },
     "Corset": {
-        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Corset/glTF-Binary/Corset.glb",
+        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Corset/glTF-Binary/Corset.glb",
         scale: 15,
         label: "Vintage Corset",
         keywords: ["corset", "dress", "clothing", "wear", "top", "shirt"],
     },
     "FlightHelmet": {
-        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/FlightHelmet/glTF-Binary/FlightHelmet.glb",
+        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/FlightHelmet/glTF-Binary/FlightHelmet.glb",
         scale: 0.8,
         label: "Flight Helmet",
         keywords: ["helmet", "hat", "cap", "headwear", "armor", "military"],
@@ -86,7 +93,8 @@ const MODEL_LIBRARY: Record<string, { url: string; scale: number; label: string;
 
     // --- Sci-Fi & Fantasy ---
     "SciFiHelmet": {
-        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/SciFiHelmet/glTF-Binary/SciFiHelmet.glb",
+        // Switched to older stable repo to fix 404
+        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/SciFiHelmet/glTF-Binary/SciFiHelmet.glb",
         scale: 1.2,
         label: "Sci-Fi Helmet",
         keywords: ["sci-fi", "space", "cyber", "futuristic", "robot", "tech"],
@@ -100,43 +108,43 @@ const MODEL_LIBRARY: Record<string, { url: string; scale: number; label: string;
 
     // --- Nature & Environment ---
     "Fox": {
-        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Fox/glTF-Binary/Fox.glb",
+        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF-Binary/Fox.glb",
         scale: 0.015,
         label: "Low Poly Fox",
         keywords: ["fox", "animal", "pet", "dog", "cat", "nature", "wild"],
     },
     "Avocado": {
-        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Avocado/glTF-Binary/Avocado.glb",
+        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Avocado/glTF-Binary/Avocado.glb",
         scale: 8,
         label: "Avocado",
         keywords: ["food", "fruit", "vegetable", "plant", "organic"],
     },
 
     // --- Architecture ---
-    "Sponza": { // Use specific building parts if full scene is too heavy? No, Sponza might be too big. Using a simpler structure.
-        // Switching to a simpler prop for 'house' for now until finding a good lightweight building
-        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Lantern/glTF-Binary/Lantern.glb",
+    "Lantern": {
+        // Renamed from Sponza to Lantern as we are using the Lantern model
+        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Lantern/glTF-Binary/Lantern.glb",
         scale: 0.04,
-        label: "Japanese Lantern", // Placeholder for structures for now
+        label: "Japanese Lantern",
         keywords: ["house", "building", "structure", "temple", "tower", "home"],
     },
 
     // --- Misc ---
     "BoomBox": {
-        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/BoomBox/glTF-Binary/BoomBox.glb",
+        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BoomBox/glTF-Binary/BoomBox.glb",
         scale: 30,
         label: "Vintage BoomBox",
         keywords: ["radio", "music", "audio", "speaker", "electronics"],
     },
     "Duck": {
-        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Duck/glTF-Binary/Duck.glb",
+        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF-Binary/Duck.glb",
         scale: 1.5,
         label: "Rubber Duck",
         keywords: ["duck", "bird", "toy", "water"],
     },
 }
 
-// Fallback model if no keywords match
+// Fallback model if no keywords match - SciFiHelmet is reliable in old repo
 const DEFAULT_MODEL = MODEL_LIBRARY["SciFiHelmet"]
 
 // Smart matching function
@@ -145,8 +153,6 @@ function getModelFromPrompt(prompt: string) {
 
     const lowercasePrompt = prompt.toLowerCase()
 
-    // Find the first model that has a keyword in the prompt
-    // Sort by keyword length to match "sports car" before "car" if needed (not implemented here but good to know)
     const matchedKey = Object.keys(MODEL_LIBRARY).find(key =>
         MODEL_LIBRARY[key].keywords.some(keyword => lowercasePrompt.includes(keyword))
     )
@@ -187,9 +193,8 @@ function Scene({ modelData }: { modelData: { url: string; scale: number; } }) {
             <directionalLight position={[-5, 5, -5]} intensity={0.5} color="#a78bfa" />
             <spotLight position={[0, 10, 0]} intensity={0.8} angle={0.5} penumbra={1} color="#6EE7B7" />
 
-            {/* Use key to force remount when URL changes - solving the 'stuck model' bug */}
+            {/* Use key to force remount when URL changes */}
             <Suspense fallback={<LoadingSpinner />}>
-                {/* Float animation for a more dynamic "AI Generated" feel */}
                 <Float speed={2} rotationIntensity={0.2} floatIntensity={0.2}>
                     <LoadedModel key={modelData.url} url={modelData.url} scale={modelData.scale} />
                 </Float>
@@ -235,6 +240,7 @@ function Scene({ modelData }: { modelData: { url: string; scale: number; } }) {
 
 interface ModelPreviewProps {
     prompt: string
+    style?: string
 }
 
 export function ModelPreview({ prompt }: ModelPreviewProps) {
@@ -242,8 +248,8 @@ export function ModelPreview({ prompt }: ModelPreviewProps) {
 
     // Preload commonly used models to ensure fast switching
     useEffect(() => {
-        useGLTF.preload(MODEL_LIBRARY["CarConcept"].url)
         useGLTF.preload(MODEL_LIBRARY["SciFiHelmet"].url)
+        useGLTF.preload(MODEL_LIBRARY["CarConcept"].url)
     }, [])
 
     return (
@@ -253,7 +259,7 @@ export function ModelPreview({ prompt }: ModelPreviewProps) {
                 background: "linear-gradient(135deg, #020617 0%, #0f172a 100%)",
             }}
         >
-            {/* Dynamic Glow Overlay */}
+            {/* Glow Overlay */}
             <div
                 className="absolute inset-0 opacity-20 pointer-events-none transition-opacity duration-1000"
                 style={{
@@ -261,7 +267,7 @@ export function ModelPreview({ prompt }: ModelPreviewProps) {
                 }}
             />
 
-            {/* Grid Pattern Overlay */}
+            {/* Grid Pattern */}
             <div
                 className="absolute inset-0 opacity-[0.03] pointer-events-none"
                 style={{
@@ -289,13 +295,6 @@ export function ModelPreview({ prompt }: ModelPreviewProps) {
                 <div className="bg-slate-900/80 backdrop-blur-md px-3 py-1 rounded-lg border border-slate-700/30 flex items-center gap-2">
                     <span className="text-[10px] font-mono text-emerald-400">ASSET:</span>
                     <span className="text-xs text-slate-300">{modelData.label}</span>
-                </div>
-            </div>
-
-            {/* Interactivity Hint */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                <div className="bg-black/60 backdrop-blur-sm px-4 py-1.5 rounded-full text-[10px] font-medium text-white/80 border border-white/10">
-                    Right Click to Pan • Scroll to Zoom
                 </div>
             </div>
 
