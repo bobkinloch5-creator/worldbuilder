@@ -218,18 +218,9 @@ function Scene({ prompt }: { prompt: string }) {
                 </group>
             </Float>
 
-            {/* Stylish Grid Floor */}
-            <Grid
-                args={[30, 30]}
-                cellSize={0.5}
-                cellThickness={0.5}
-                cellColor="#334155"
-                sectionSize={2.5}
-                sectionThickness={1}
-                sectionColor="#475569"
-                fadeDistance={20}
-                fadeStrength={1}
-                infiniteGrid
+            {/* Stylish Grid Floor - Replaced with gridHelper to avoid ReferenceError */}
+            <gridHelper
+                args={[30, 30, 0x334155, 0x475569]}
                 position={[0, -0.05, 0]}
             />
 
@@ -259,8 +250,8 @@ export function ModelPreview({ prompt }: ModelPreviewProps) {
     return (
         <div
             className={`relative transition-all duration-500 ease-in-out group ${isExpanded
-                    ? "fixed inset-4 z-50 h-[calc(100vh-2rem)] rounded-3xl shadow-2xl ring-1 ring-white/10"
-                    : "w-full h-[500px] mb-12 rounded-3xl"
+                ? "fixed inset-4 z-50 h-[calc(100vh-2rem)] rounded-3xl shadow-2xl ring-1 ring-white/10"
+                : "w-full h-[500px] mb-12 rounded-3xl"
                 }`}
             style={{
                 background: "radial-gradient(circle at center, #1e293b 0%, #020617 100%)",
