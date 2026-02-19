@@ -14,6 +14,7 @@ interface OutputPanelProps {
 }
 
 const categoryLabels: Record<Category, { label: string; ext: string }> = {
+  models: { label: "3D Model Guide", ext: ".txt" },
   scripts: { label: "LSL Script", ext: ".lsl" },
   prefabs: { label: "Build Plan", ext: ".txt" },
   textures: { label: "Asset Brief", ext: ".txt" },
