@@ -1,6 +1,16 @@
 "use client"
 
 import { useState } from "react"
+import dynamic from "next/dynamic"
+
+const ModelPreview = dynamic(() => import("@/components/model-preview").then(m => m.ModelPreview), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[280px] rounded-xl border border-border bg-secondary/50 flex items-center justify-center">
+      <span className="text-xs text-muted-foreground animate-pulse">Loading 3D Preview...</span>
+    </div>
+  ),
+})
 import { Navbar } from "@/components/landing/navbar"
 import { Hero } from "@/components/landing/hero"
 import { Features } from "@/components/landing/features"
@@ -99,6 +109,13 @@ export default function Home() {
               )
             })}
           </div>
+
+          {/* 3D Preview for models */}
+          {activeCategory === "models" && (
+            <div className="mb-6">
+              <ModelPreview prompt={values.prompt || ""} style={values.style || "realistic"} />
+            </div>
+          )}
 
           {/* Generator grid */}
           <div className="grid gap-6 lg:grid-cols-[400px_1fr]">

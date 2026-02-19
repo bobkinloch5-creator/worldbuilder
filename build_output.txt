@@ -2,14 +2,14 @@
 - Environments: .env.local
 
   Creating an optimized production build ...
-Γ£ô Compiled successfully in 1491.8ms
+Γ£ô Compiled successfully in 2.1s
   Skipping validation of types
   Collecting page data using 27 workers ...
   Generating static pages using 27 workers (0/11) ...
   Generating static pages using 27 workers (2/11) 
   Generating static pages using 27 workers (5/11) 
   Generating static pages using 27 workers (8/11) 
-Γ£ô Generating static pages using 27 workers (11/11) in 473.0ms
+Γ£ô Generating static pages using 27 workers (11/11) in 443.7ms
   Finalizing page optimization ...
 
 Route (app)
