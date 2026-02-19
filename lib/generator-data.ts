@@ -20,45 +20,25 @@ export interface CategoryConfig {
 export const categories: CategoryConfig[] = [
   {
     id: "models",
-    label: "AI 3D Model Generator",
-    description: "Generate 3D mesh models from text or image references",
-    icon: "Box", // Using Box as placeholder, will import Box if needed, or leave as string if it's dynamic
+    label: "3D Models",
+    description: "Describe any object and get a full 3D modeling guide with AI prompts",
+    icon: "Cuboid",
     fields: [
       {
-        id: "inputMethod",
-        label: "Generation Method",
-        type: "select",
-        required: true,
-        options: [
-          { value: "text-to-3d", label: "Text to 3D Model" },
-          { value: "image-to-3d", label: "Image to 3D Model" },
-        ],
-      },
-      {
         id: "prompt",
-        label: "Description or Image URL",
+        label: "What do you want to create?",
         type: "textarea",
-        placeholder: "Describe the 3D model you want to generate...",
+        placeholder: "e.g., A medieval sword with glowing runes, a sci-fi spaceship, a cozy armchair...",
         required: true,
       },
       {
         id: "style",
-        label: "Art Style",
+        label: "Style",
         type: "select",
         options: [
           { value: "realistic", label: "Realistic" },
           { value: "cartoon", label: "Cartoon / Low Poly" },
           { value: "sculpture", label: "Statue / Sculpture" },
-        ],
-      },
-      {
-        id: "format",
-        label: "File Format",
-        type: "select",
-        options: [
-          { value: "glb", label: ".GLB (Binary glTF)" },
-          { value: "obj", label: ".OBJ (Wavefront)" },
-          { value: "usdz", label: ".USDZ (AR Ready)" },
         ],
       },
     ],

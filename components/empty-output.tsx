@@ -1,7 +1,8 @@
-import { Code, Box, Paintbrush, Users, Globe, Puzzle } from "lucide-react"
+import { Code, Box, Paintbrush, Users, Globe, Puzzle, Cuboid } from "lucide-react"
 import type { Category } from "@/lib/generator-data"
 
 const icons: Record<Category, typeof Code> = {
+  models: Cuboid,
   scripts: Code,
   prefabs: Box,
   textures: Paintbrush,
@@ -11,6 +12,10 @@ const icons: Record<Category, typeof Code> = {
 }
 
 const hints: Record<Category, { title: string; description: string }> = {
+  models: {
+    title: "No output yet",
+    description: "Describe what you want to create and get a ready-to-use 3D modeling guide.",
+  },
   scripts: {
     title: "No output yet",
     description: "Choose a script type, name your object, and describe what it should do.",
