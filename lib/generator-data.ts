@@ -41,6 +41,17 @@ export const categories: CategoryConfig[] = [
           { value: "sculpture", label: "Statue / Sculpture" },
         ],
       },
+      {
+        id: "format",
+        label: "Export As",
+        type: "select",
+        options: [
+          { value: "dae", label: ".DAE — Second Life / OpenSim" },
+          { value: "glb", label: ".GLB — Web / Modern Viewers" },
+          { value: "obj", label: ".OBJ — Universal 3D" },
+          { value: "fbx", label: ".FBX — Unity / Unreal" },
+        ],
+      },
     ],
   },
   {
