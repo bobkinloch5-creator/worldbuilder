@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ExternalLink, Sparkles, Image, Palette, Layers, PenTool, Frame, Star, Copy, Check, Loader2, Download, Link2 } from "lucide-react"
+import { ExternalLink, Sparkles, Image, Palette, Layers, PenTool, Frame, Star, Copy, Check, Loader2, Download, Link2, Shirt } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const canvaTemplates = [
@@ -136,6 +136,28 @@ const canvaTemplates = [
             "Minimalist tech logo for a virtual architecture studio",
             "Cute kawaii mascot for a fashion brand",
             "Edgy cyberpunk gang emblem with skull and neon",
+        ],
+    },
+    {
+        id: "clothing",
+        icon: Shirt,
+        title: "Clothing & Apparel",
+        description: "Design fabric textures for shirts, pants, dresses, and other avatar clothing items.",
+        canvaUrl: "https://www.canva.com/design?create&width=1024&height=1024&units=px",
+        width: 1024,
+        height: 1024,
+        dimensions: "1024×1024 or 512×512",
+        tips: [
+            "Use standard SL clothing templates as a guide layer (search 'SL clothing template')",
+            "Ensure seams align specifically at the sides",
+            "Use seamless patterns for fabric fills",
+            "Export as PNG with transparency if needed",
+        ],
+        prompts: [
+            "Cyberpunk leather jacket texture with neon trim",
+            "Floral summer dress fabric pattern, seamless",
+            "Worn denim jeans texture blue",
+            "Medieval armor chainmail texture silver",
         ],
     },
 ]
@@ -319,7 +341,6 @@ export function CanvaStudio() {
                                         Connect Canva Pro
                                     </a>
                                 </Button>
-                                <p className="text-[10px] text-muted-foreground/50 mt-1.5 text-center">Site owner only</p>
                             </div>
                         )}
                     </div>

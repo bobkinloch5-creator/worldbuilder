@@ -41,7 +41,7 @@ export function HowItWorks() {
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {steps.map((step) => (
             <div key={step.step} className="relative">
-              <span className="font-mono text-5xl font-bold text-border">
+              <span className="font-mono text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
                 {step.step}
               </span>
               <h3 className="mt-3 text-lg font-semibold text-foreground">
