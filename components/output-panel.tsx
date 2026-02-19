@@ -3,13 +3,15 @@
 import { useState, useMemo, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Copy, Check, Download, RotateCcw, ChevronRight } from "lucide-react"
+import { Copy, Check, Download, RotateCcw } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import type { Category } from "@/lib/generator-data"
+import { Loader2 } from "lucide-react"
 
 interface OutputPanelProps {
   output: string
   category: Category
+  prompt?: string // Add prompt prop for regeneration
   onReset: () => void
 }
 
@@ -27,9 +29,6 @@ const categoryLabels: Record<Category, { label: string; ext: string }> = {
 const LSL_KEYWORDS = /\b(default|state_entry|touch_start|touch_end|timer|sensor|no_sensor|listen|money|changed|collision_start|collision_end|land_collision_start|on_rez|attach|run_time_permissions|link_message|dataserver|http_response|if|else|for|while|do|return|jump|state|integer|float|string|vector|rotation|key|list)\b/g
 const LSL_FUNCTIONS = /\b(ll[A-Z][a-zA-Z0-9]*)\b/g
 const LSL_CONSTANTS = /\b(TRUE|FALSE|NULL_KEY|ZERO_VECTOR|ZERO_ROTATION|PI|DEG_TO_RAD|RAD_TO_DEG|AGENT|ACTIVE|PASSIVE|SCRIPTED|LINK_SET|LINK_ALL_OTHERS|LINK_ALL_CHILDREN|LINK_THIS|LINK_ROOT|ALL_SIDES|EOF|PERMISSION_[A-Z_]+|PRIM_[A-Z_]+|PSYS_[A-Z_]+|CLICK_ACTION_[A-Z_]+|KFM_[A-Z_]+)\b/g
-const LSL_STRINGS = /"(?:[^"\\]|\\.)*"/g
-const LSL_COMMENTS = /\/\/.*$/gm
-const LSL_NUMBERS = /\b\d+\.?\d*\b/g
 
 interface Section {
   title: string
@@ -72,73 +71,31 @@ function parseSections(text: string): Section[] {
 }
 
 function highlightLSL(text: string): string {
-  // Escape HTML first
   let html = text
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
 
-  // Order matters: comments first (they can contain other patterns)
-  const replacements: { start: number; end: number; replacement: string }[] = []
-
-  // Find comments
-  let match: RegExpExecArray | null
-  const commentRegex = /\/\/.*$/gm
-  while ((match = commentRegex.exec(html)) !== null) {
-    replacements.push({
-      start: match.index,
-      end: match.index + match[0].length,
-      replacement: `<span class="lsl-comment">${match[0]}</span>`,
-    })
-  }
-
-  // Find strings (but not inside comments)
-  const stringRegex = /&quot;(?:[^&]|&(?!quot;))*&quot;|"(?:[^"\\]|\\.)*"/g
-  while ((match = stringRegex.exec(html)) !== null) {
-    const inComment = replacements.some((r) => match!.index >= r.start && match!.index < r.end)
-    if (!inComment) {
-      replacements.push({
-        start: match.index,
-        end: match.index + match[0].length,
-        replacement: `<span class="lsl-string">${match[0]}</span>`,
-      })
-    }
-  }
-
-  // Sort replacements by position (reverse order for safe replacement)
-  replacements.sort((a, b) => b.start - a.start)
-  for (const r of replacements) {
-    html = html.substring(0, r.start) + r.replacement + html.substring(r.end)
-  }
-
-  // Now apply keyword/function highlighting (avoiding already-wrapped spans)
-  html = html.replace(
-    /\b(default|state_entry|touch_start|touch_end|timer|sensor|no_sensor|listen|money|changed|collision_start|on_rez|attach|run_time_permissions|link_message|if|else|for|while|do|return|jump|state|integer|float|string|vector|rotation|key|list)\b/g,
-    (m) => `<span class="lsl-keyword">${m}</span>`
-  )
-
-  html = html.replace(
-    /\b(ll[A-Z][a-zA-Z0-9]*)\b/g,
-    (m) => `<span class="lsl-function">${m}</span>`
-  )
-
-  html = html.replace(
-    /\b(TRUE|FALSE|NULL_KEY|ZERO_VECTOR|ZERO_ROTATION|PI|DEG_TO_RAD|RAD_TO_DEG|AGENT|ACTIVE|PASSIVE|SCRIPTED|LINK_SET|LINK_ALL_OTHERS|LINK_ALL_CHILDREN|LINK_THIS|LINK_ROOT|ALL_SIDES|EOF|PERMISSION_\w+|PRIM_\w+|PSYS_\w+|CLICK_ACTION_\w+|KFM_\w+)\b/g,
-    (m) => `<span class="lsl-constant">${m}</span>`
-  )
-
-  // Numbers (not inside tags)
-  html = html.replace(
-    /(?<![a-zA-Z_"=>])(\b\d+\.?\d*\b)(?![a-zA-Z_<])/g,
-    (m) => `<span class="lsl-number">${m}</span>`
-  )
+  // Simple highlighting for speed and reliability
+  html = html.replace(LSL_KEYWORDS, (m) => `<span class="lsl-keyword">${m}</span>`)
+  html = html.replace(LSL_FUNCTIONS, (m) => `<span class="lsl-function">${m}</span>`)
+  html = html.replace(LSL_CONSTANTS, (m) => `<span class="lsl-constant">${m}</span>`)
+  html = html.replace(/\/\/.*$/gm, (m) => `<span class="lsl-comment">${m}</span>`)
+  html = html.replace(/"(?:[^"\\]|\\.)*"/g, (m) => `<span class="lsl-string">${m}</span>`)
+  html = html.replace(/(?<![a-zA-Z_"=>])(\b\d+\.?\d*\b)(?![a-zA-Z_<])/g, (m) => `<span class="lsl-number">${m}</span>`)
 
   return html
 }
 
-export function OutputPanel({ output, category, onReset }: OutputPanelProps) {
+export function OutputPanel({ output, category, prompt, onReset }: OutputPanelProps) {
   const [copied, setCopied] = useState(false)
   const [copiedSection, setCopiedSection] = useState<number | null>(null)
+
+  // Texture generation state
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null)
+  const [showComparison, setShowComparison] = useState(false)
 
   const isLSL = category === "scripts" || category === "npcs" || category === "modules"
   const sections = useMemo(() => parseSections(output), [output])
@@ -156,14 +113,57 @@ export function OutputPanel({ output, category, onReset }: OutputPanelProps) {
   }, [])
 
   const handleDownload = () => {
-    const { ext } = categoryLabels[category]
-    const blob = new Blob([output], { type: "text/plain" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `sl-builder-output${ext}`
-    a.click()
-    URL.revokeObjectURL(url)
+    if (generatedImage && category === 'textures') {
+      const link = document.createElement('a');
+      link.href = generatedImage;
+      link.download = `generated-texture.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      const { ext } = categoryLabels[category]
+      const blob = new Blob([output], { type: "text/plain" })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `sl-builder-output${ext}`
+      a.click()
+      URL.revokeObjectURL(url)
+    }
+  }
+
+  // Generate texture using our new API
+  const handleGenerateTexture = async () => {
+    if (!prompt || category !== 'textures') return
+
+    setIsGenerating(true)
+    setProgress(10)
+
+    const progressInterval = setInterval(() => {
+      setProgress((prev) => (prev >= 90 ? 90 : prev + 10))
+    }, 800)
+
+    try {
+      const response = await fetch("/api/ai/textures", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to generate texture")
+      }
+
+      const data = await response.json()
+      setGeneratedImage(data.image)
+      setShowComparison(true)
+    } catch (error) {
+      console.error("Texture generation failed:", error)
+    } finally {
+      clearInterval(progressInterval)
+      setProgress(100)
+      setIsGenerating(false)
+    }
   }
 
   const scrollToSection = (index: number) => {
@@ -197,6 +197,25 @@ export function OutputPanel({ output, category, onReset }: OutputPanelProps) {
           </span>
         </div>
         <div className="flex items-center gap-1">
+          {category === 'textures' && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleGenerateTexture}
+              disabled={isGenerating || !prompt}
+              className="h-7 px-3 text-xs bg-emerald-600 hover:bg-emerald-700 text-white mr-2"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                "Generate Visual"
+              )}
+            </Button>
+          )}
+
           <Button
             variant="ghost"
             size="sm"
@@ -232,6 +251,18 @@ export function OutputPanel({ output, category, onReset }: OutputPanelProps) {
           </Button>
         </div>
       </div>
+
+      {/* Comparison View for Textures */}
+      {category === 'textures' && generatedImage && (
+        <div className="p-4 border-b border-border bg-black/20">
+          <div className="relative aspect-square w-full max-w-sm mx-auto rounded-lg overflow-hidden border border-border shadow-2xl">
+            <img src={generatedImage} alt="Generated Texture" className="w-full h-full object-cover" />
+            <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-xs text-emerald-400 border border-emerald-500/30">
+              1024x1024 • Seamless
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Section navigation */}
       {sections.length > 2 && (
