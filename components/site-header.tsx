@@ -12,33 +12,36 @@ const navItems = [
 
 export function SiteHeader() {
   return (
-    <header className="flex items-center justify-between border-b border-border px-6 py-4">
-      <div className="flex items-center gap-3">
-        <div className="flex items-center justify-center size-8 rounded-md bg-primary text-primary-foreground font-mono text-sm font-bold">
-          SL
-        </div>
-        <div>
-          <h1 className="text-sm font-semibold text-foreground tracking-tight">
-            SL Builder
-          </h1>
-          <p className="text-xs text-muted-foreground">
-            LSL Asset Generator
-          </p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <nav className="hidden md:flex items-center gap-1" aria-label="Asset categories">
-          {navItems.map((item) => (
-            <span
-              key={item.label}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-muted-foreground"
-            >
-              <item.icon className="size-3.5" />
-              {item.label}
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-14 max-w-screen-2xl items-center">
+        <div className="mr-4 flex">
+          <a className="mr-6 flex items-center space-x-2" href="/">
+            <div className="flex items-center justify-center size-8 rounded-md bg-primary text-primary-foreground font-mono text-sm font-bold">
+              SL
+            </div>
+            <span className="hidden font-bold sm:inline-block">
+              SL Builder
             </span>
-          ))}
-        </nav>
-        <ThemeToggle />
+          </a>
+          <nav className="flex items-center gap-4 text-sm font-medium">
+            {navItems.map((item) => (
+              <a
+                key={item.label}
+                href={`#${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+                className="transition-colors hover:text-foreground/80 text-foreground/60 flex items-center gap-2"
+              >
+                <item.icon className="size-4" />
+                <span className="hidden lg:inline">{item.label}</span>
+              </a>
+            ))}
+          </nav>
+        </div>
+        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
+          <div className="w-full flex-1 md:w-auto md:flex-none">
+            {/* Search or other controls could go here */}
+          </div>
+          <ThemeToggle />
+        </div>
       </div>
     </header>
   )

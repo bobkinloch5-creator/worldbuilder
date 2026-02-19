@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
         const data = await res.json()
 
         // Store tokens
-        storeTokens({
+        await storeTokens({
             access_token: data.access_token,
             refresh_token: data.refresh_token,
             expires_at: Date.now() + data.expires_in * 1000,
