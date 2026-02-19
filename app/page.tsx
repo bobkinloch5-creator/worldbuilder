@@ -135,6 +135,7 @@ export default function Home() {
                 <OutputPanel
                   output={output}
                   category={activeCategory}
+                  prompt={values.prompt} // correct prompt prop passed here!
                   onReset={() => setOutput("")}
                 />
               ) : (
